@@ -1,0 +1,92 @@
+"""
+schemas.py
+----------
+Pydantic models define what shape of JSON we ACCEPT (request bodies) and
+what shape we SEND BACK (response bodies). They are deliberately separate
+from the SQLAlchemy models in models.py:
+  - models.py describes DATABASE TABLES
+  - schemas.py describes API JSON SHAPES
+FastAPI uses these to auto-validate incoming requests (returning 422 on
+failure) and to auto-generate the /docs page.
+"""
+
+from typing import Optional, Literal
+from pydantic import BaseModel, EmailStr, field_validator
+
+# --- Users -----------------------------------------------------------------
+
+class UserCreate(BaseModel):
+    name: str
+    email: EmailStr
+
+
+class UserOut(BaseModel):
+    id: int
+    name: str
+    email: EmailStr
+
+    class Config:
+        from_attributes = True  # lets Pydantic read straight from ORM objects
+
+
+# --- Projects ----------------------------------------------------------------
+
+class ProjectCreate(BaseModel):
+    name: str
+    owner_id: int
+
+
+class ProjectOut(BaseModel):
+    id: int
+    name: str
+    owner_id: int
+
+    class Config:
+        from_attributes = True
+
+
+# --- Tasks -------------------------------------------------------------------
+
+# Literal["low", "medium", "high"] IS the Field constraint the brief asks
+# for: FastAPI will reject (422) any priority value outside this closed set
+# automatically, before your endpoint code even runs.
+
+class TaskCreate(BaseModel):
+    title: str
+    priority: Literal["low", "medium", "high"] = "medium"
+    due_date: Optional[str] = None
+    project_id: int
+
+    # Custom validator: reject a blank title after trimming whitespace.
+    # This is the "at least one custom validator" requirement from the brief.
+    @field_validator("title")
+    @classmethod
+    def title_must_not_be_blank(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("title must not be blank")
+        return v
+
+
+class TaskUpdate(BaseModel):
+    # All optional so PATCH-style partial updates are possible.
+    title: Optional[str] = None
+    priority: Optional[Literal["low", "medium", "high"]] = None
+    due_date: Optional[str] = None
+
+    @field_validator("title")
+    @classmethod
+    def title_must_not_be_blank(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not v.strip():
+            raise ValueError("title must not be blank")
+        return v
+
+
+class TaskOut(BaseModel):
+    id: int
+    title: str
+    priority: str
+    due_date: Optional[str]
+    project_id: int
+
+    class Config:
+        from_attributes = True
