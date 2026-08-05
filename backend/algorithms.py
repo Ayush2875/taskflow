@@ -1,18 +1,3 @@
-"""
-algorithms.py
--------------
-Hand-rolled sorting and searching — no built-in sorted()/list.sort() used
-anywhere. These operate on lists of plain dicts, e.g.
-    [{"id": 1, "title": "Restock", "priority_rank": 3}, ...]
-
-insertion_sort mutates its input in place (matches how you'd sort a list
-you just fetched from the DB, then hand straight to the response).
-binary_search / linear_search return an index into that list, or -1 if
-the target isn't found — -1 is the "not found" convention used
-everywhere in this file.
-"""
-
-
 def insertion_sort(records, key):
     """
     Sort `records` in place by record[key], ascending.
@@ -139,7 +124,7 @@ def linear_search_count(records, target_value, key):
 # ---------------------------------------------------------------------------
 # Quick manual sanity check — run this file directly to eyeball correctness
 # before wiring it into the API. Not the official Task 7 checks script
-# (that's a separate file, check_algorithms.py, coming in the next branch).
+# (that's a separate file, check_algorithms.py, added later).
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     data = [
