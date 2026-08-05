@@ -20,7 +20,7 @@
   --low: #6fcf97;
   --danger: #e85d4c;
 
-  --font-display: "Barlow Condensed", "Oswald", sans-serif;
+  --font-family: "Gill Sans Extrabold", sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", "Courier New", monospace;
 }
@@ -46,7 +46,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 24px;
+  padding: 14px 26px;
   background: var(--surface);
   border-bottom: 3px solid var(--accent);
 }
