@@ -1,0 +1,284 @@
+/* ===========================================================================
+   TaskFlow — Ops Board
+   Design direction: a warehouse/logistics ticket board, not a generic SaaS
+   dashboard. Dark charcoal surface, hazard-yellow accent (the color you'd
+   see on warehouse signage/bin labels), monospace for anything ID-like or
+   data-like, priority-coded ticket stripes on each task card.
+   =========================================================================== */
+
+:root {
+  --bg: #14161a;
+  --surface: #1c1f24;
+  --surface-raised: #22262c;
+  --border: #33383f;
+  --text: #e8e6e1;
+  --text-muted: #8a8f98;
+  --accent: #f2b705;
+  --accent-text: #1a1a1a;
+  --high: #e85d4c;
+  --medium: #f2b705;
+  --low: #6fcf97;
+  --danger: #e85d4c;
+
+  --font-display: "Barlow Condensed", "Oswald", sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "Courier New", monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.5;
+}
+
+/* ---------------------------------------------------------------------------
+   Header — sticky, satisfies Task 10's "position: sticky on one persistent
+   UI element" requirement.
+--------------------------------------------------------------------------- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  background: var(--surface);
+  border-bottom: 3px solid var(--accent);
+}
+
+.header-inner { display: flex; align-items: baseline; gap: 10px; }
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.site-header h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.7rem;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+.header-status {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.header-status.online::before { content: "● "; color: var(--low); }
+.header-status.offline::before { content: "● "; color: var(--danger); }
+
+/* ---------------------------------------------------------------------------
+   Layout
+--------------------------------------------------------------------------- */
+main {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 28px 24px 60px;
+}
+
+section.intake, section.board {
+  margin-bottom: 32px;
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.3rem;
+  letter-spacing: 0.01em;
+  margin: 0 0 14px;
+}
+
+/* ---------------------------------------------------------------------------
+   Intake form
+--------------------------------------------------------------------------- */
+.intake {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  padding: 20px 22px;
+  border-radius: 4px;
+}
+
+.field { margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; }
+
+.field-row {
+  display: flex;
+  gap: 16px;
+}
+.field-row .field { flex: 1; }
+
+label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+input[type="text"], select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 3px;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+}
+
+input[type="text"]:focus, select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+.field-error {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--danger);
+  margin: 0;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-text);
+  border: none;
+  padding: 11px 20px;
+  border-radius: 3px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-top: 4px;
+}
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-primary:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+
+/* ---------------------------------------------------------------------------
+   Task list — Task 10's deliberate box model: visible padding/border/margin
+   on both the container and individual items.
+--------------------------------------------------------------------------- */
+.board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.task-count {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.task-list {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-item {
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--medium); /* overridden per-priority below */
+  border-radius: 3px;
+  padding: 14px 16px;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.task-item.priority-high { border-left-color: var(--high); }
+.task-item.priority-medium { border-left-color: var(--medium); }
+.task-item.priority-low { border-left-color: var(--low); }
+
+.task-main { flex: 1; min-width: 0; }
+
+.task-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 4px;
+  word-break: break-word;
+}
+
+.task-meta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.priority-tag {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+.priority-tag.priority-high { color: var(--high); }
+.priority-tag.priority-medium { color: var(--medium); }
+.priority-tag.priority-low { color: var(--low); }
+
+.task-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+.btn-icon {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 6px 10px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+.btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+.btn-icon.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+.empty-state {
+  text-align: center;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 24px 0 0;
+}
+
+/* Inline edit mode */
+.task-item.editing { flex-direction: column; align-items: stretch; }
+.edit-row { display: flex; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+.edit-row input, .edit-row select { flex: 1; min-width: 100px; }
+
+/* ---------------------------------------------------------------------------
+   Responsive breakpoints (Task 10) — layout visibly changes at both.
+--------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  main { padding: 20px 16px 50px; }
+  .field-row { flex-direction: column; gap: 14px; }
+  .task-item { flex-direction: column; }
+  .task-actions { align-self: flex-end; }
+}
+
+@media (max-width: 480px) {
+  .site-header { flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px 16px; }
+  .site-header h1 { font-size: 1.4rem; }
+  .intake { padding: 16px; }
+  .btn-primary { width: 100%; }
+}

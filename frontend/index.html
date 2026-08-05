@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskFlow — Ops Board</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Sticky header bar (Task 10: position: sticky on a persistent UI element) -->
+  <header class="site-header">
+    <div class="header-inner">
+      <span class="eyebrow">Blinkit Ops</span>
+      <h1>TaskFlow</h1>
+    </div>
+    <span class="header-status" id="connection-status">connecting…</span>
+  </header>
+
+  <main>
+    <!-- Intake form (Task 9) -->
+    <section class="intake" aria-labelledby="intake-heading">
+      <h2 id="intake-heading">New ticket</h2>
+
+      <form id="task-form" novalidate>
+        <div class="field">
+          <label for="title">Title</label>
+          <input type="text" id="title" name="title" placeholder="e.g. Restock aisle 3 chillers" autocomplete="off" />
+          <p class="field-error" id="title-error" hidden></p>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="due_date">Due</label>
+            <input type="text" id="due_date" name="due_date" placeholder="e.g. tomorrow, 2026-08-10" autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label for="priority">Priority</label>
+            <select id="priority" name="priority">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary">Add task</button>
+      </form>
+    </section>
+
+    <!-- Task list (Task 9/11) -->
+    <section class="board" aria-labelledby="board-heading">
+      <div class="board-header">
+        <h2 id="board-heading">Open tickets</h2>
+        <span class="task-count" id="task-count">0 tasks</span>
+      </div>
+
+      <div id="task-list" class="task-list">
+        <!-- Task items are injected here by script.js via createElement/appendChild -->
+      </div>
+
+      <p class="empty-state" id="empty-state" hidden>No tickets yet — add one above.</p>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
