@@ -1,18 +1,5 @@
-"""
-main.py
--------
-The FastAPI app itself: routes, dependency injection, middleware, CORS.
-
-Run it with:
-    uvicorn main:app --reload
-
-Then open http://127.0.0.1:8000/docs to test every endpoint interactively
-— this is faster than Postman for a solo dev and I'd use it constantly
-while building.
-"""
-
 import time
-from typing import List
+from typing import List, Optional
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,7 +8,13 @@ from sqlalchemy import func
 
 import models
 import schemas
+import algorithms
 from database import engine, SessionLocal, Base
+
+# Section 2, Task 4: maps the closed priority set to a comparable rank so
+# insertion_sort has a numeric value to compare — sorting the raw strings
+# "low"/"medium"/"high" alphabetically would NOT give the right order.
+PRIORITY_RANK = {"low": 1, "medium": 2, "high": 3}
 
 # Creates taskflow.db and all tables the first time this runs, if they
 # don't already exist. Safe to call every startup — it's a no-op if the
@@ -164,8 +157,72 @@ def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db)):
 
 
 @app.get("/tasks", response_model=List[schemas.TaskOut])
-def list_tasks(db: Session = Depends(get_db)):
-    return db.query(models.Task).all()
+def list_tasks(sort: Optional[str] = None, db: Session = Depends(get_db)):
+    """
+    Section 2, Task 4: GET /tasks?sort=priority (or sort=due_date).
+    Fetches real rows from the DB, then sorts them using our OWN
+    insertion_sort — never sorted()/list.sort(). If `sort` is omitted,
+    tasks come back in default DB order (unchanged behavior).
+    """
+    db_tasks = db.query(models.Task).all()
+    task_dicts = [
+        {
+            "id": t.id,
+            "title": t.title,
+            "priority": t.priority,
+            "due_date": t.due_date,
+            "project_id": t.project_id,
+        }
+        for t in db_tasks
+    ]
+
+    if sort == "priority":
+        for d in task_dicts:
+            d["_sort_key"] = PRIORITY_RANK.get(d["priority"], 0)
+        algorithms.insertion_sort(task_dicts, "_sort_key")
+        for d in task_dicts:
+            del d["_sort_key"]
+    elif sort == "due_date":
+        # due_date is nullable text — treat missing dates as "" so they
+        # sort first, since insertion_sort's `>` comparison can't compare
+        # None to a string.
+        for d in task_dicts:
+            d["_sort_key"] = d["due_date"] or ""
+        algorithms.insertion_sort(task_dicts, "_sort_key")
+        for d in task_dicts:
+            del d["_sort_key"]
+    elif sort is not None:
+        raise HTTPException(status_code=422, detail="sort must be 'priority' or 'due_date'")
+
+    return task_dicts
+
+
+@app.get("/tasks/search", response_model=schemas.TaskOut)
+def search_tasks(title: str, algo: str = "binary", db: Session = Depends(get_db)):
+    """
+    Section 2, Task 4: GET /tasks/search?title=<exact title>&algo=binary|linear
+    Builds an in-memory {"id", "title"} index from real DB rows, then finds
+    the exact-title match using our own binary_search (after sorting the
+    index with insertion_sort) or linear_search over the unsorted index.
+    """
+    if algo not in ("binary", "linear"):
+        raise HTTPException(status_code=422, detail="algo must be 'binary' or 'linear'")
+
+    db_tasks = db.query(models.Task).all()
+    index = [{"id": t.id, "title": t.title} for t in db_tasks]
+
+    if algo == "binary":
+        algorithms.insertion_sort(index, "title")
+        found_idx = algorithms.binary_search(index, title, "title")
+    else:
+        found_idx = algorithms.linear_search(index, title, "title")
+
+    if found_idx == -1:
+        raise HTTPException(status_code=404, detail="No task with that exact title")
+
+    matched_id = index[found_idx]["id"]
+    task = db.query(models.Task).filter(models.Task.id == matched_id).first()
+    return task
 
 
 @app.get("/tasks/{task_id}", response_model=schemas.TaskOut)
