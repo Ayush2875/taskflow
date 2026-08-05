@@ -1,0 +1,5 @@
+[33mc603542[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/algorithms-core[m[33m)[m Implement insertion_sort, binary_search, linear_search
+[33mea598ed[m[33m ([m[1;31morigin/main[m[33m, [m[1;32mmain[m[33m, [m[1;32mfeature/frontend-dashboard[m[33m)[m Polish task card styling
+[33m5cd0fec[m Add frontend dashboard: form, task list rendering, CRUD wiring
+[33mab628a8[m Fix folder structure: lowercase backend/, add frontend/ placeholder
+[33m8ccb4c2[m Initial project structure: backend skeleton with DB models, schemas, CRUD
