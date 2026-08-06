@@ -1,15 +1,3 @@
-"""
-schemas.py
-----------
-Pydantic models define what shape of JSON we ACCEPT (request bodies) and
-what shape we SEND BACK (response bodies). They are deliberately separate
-from the SQLAlchemy models in models.py:
-  - models.py describes DATABASE TABLES
-  - schemas.py describes API JSON SHAPES
-FastAPI uses these to auto-validate incoming requests (returning 422 on
-failure) and to auto-generate the /docs page.
-"""
-
 from typing import Optional, Literal
 from pydantic import BaseModel, EmailStr, field_validator
 
@@ -90,3 +78,10 @@ class TaskOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# --- AI Quick-Add (Section 3) ------------------------------------------------
+
+class QuickAddRequest(BaseModel):
+    description: str
+    project_id: int
