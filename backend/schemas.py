@@ -6,15 +6,37 @@ from pydantic import BaseModel, EmailStr, field_validator
 class UserCreate(BaseModel):
     name: str
     email: EmailStr
+    password: str
+
+    @field_validator("password")
+    @classmethod
+    def password_min_length(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("password must be at least 8 characters")
+        return v
 
 
 class UserOut(BaseModel):
     id: int
     name: str
     email: EmailStr
+    # Deliberately no password_hash here — this schema is what gets sent
+    # back to the client, and the hash should never leave the server.
 
     class Config:
-        from_attributes = True  # lets Pydantic read straight from ORM objects
+        from_attributes = True
+
+
+# --- Auth --------------------------------------------------------------------
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
 
 
 # --- Projects ----------------------------------------------------------------
@@ -35,18 +57,12 @@ class ProjectOut(BaseModel):
 
 # --- Tasks -------------------------------------------------------------------
 
-# Literal["low", "medium", "high"] IS the Field constraint the brief asks
-# for: FastAPI will reject (422) any priority value outside this closed set
-# automatically, before your endpoint code even runs.
-
 class TaskCreate(BaseModel):
     title: str
     priority: Literal["low", "medium", "high"] = "medium"
     due_date: Optional[str] = None
     project_id: int
 
-    # Custom validator: reject a blank title after trimming whitespace.
-    # This is the "at least one custom validator" requirement from the brief.
     @field_validator("title")
     @classmethod
     def title_must_not_be_blank(cls, v: str) -> str:
@@ -56,7 +72,6 @@ class TaskCreate(BaseModel):
 
 
 class TaskUpdate(BaseModel):
-    # All optional so PATCH-style partial updates are possible.
     title: Optional[str] = None
     priority: Optional[Literal["low", "medium", "high"]] = None
     due_date: Optional[str] = None
