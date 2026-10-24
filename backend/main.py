@@ -3,7 +3,7 @@ import time
 from typing import List, Optional
 
 from fastapi import FastAPI, Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -35,26 +35,28 @@ def get_db():
 
 
 # ---------------------------------------------------------------------------
-# Auth: OAuth2PasswordBearer just tells FastAPI/Swagger where to send people
-# to get a token (for the "Authorize" button in /docs) — it does NOT
-# validate anything by itself. auto_error=False means a request with no
-# token at all reaches our own code as token=None, rather than FastAPI
-# raising its own generic 401 before we can produce our own error message.
+# Auth: HTTPBearer reads the "Authorization: Bearer <token>" header and makes
+# the "Authorize" button in /docs accept a pasted token. auto_error=False
+# means a request with no token reaches our own code (credentials=None), so
+# we return our own 401 message instead of FastAPI's generic one.
 # ---------------------------------------------------------------------------
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> models.User:
+def get_current_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+) -> models.User:
     unauthorized = HTTPException(
         status_code=401,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    if token is None:
+    if credentials is None:
         raise unauthorized
 
     try:
-        payload = auth.decode_access_token(token)
+        payload = auth.decode_access_token(credentials.credentials)
         user_id = payload.get("sub")
         if user_id is None:
             raise unauthorized

@@ -1,9 +1,8 @@
 /* ===========================================================================
    TaskFlow — Ops Board
-   Design direction: a warehouse/logistics ticket board, not a generic SaaS
-   dashboard. Dark charcoal surface, hazard-yellow accent (the color you'd
-   see on warehouse signage/bin labels), monospace for anything ID-like or
-   data-like, priority-coded ticket stripes on each task card.
+   Design direction: a warehouse/logistics ticket board. Dark charcoal
+   surface, hazard-yellow accent, monospace for IDs/data, priority-coded
+   ticket stripes on each task card.
    =========================================================================== */
 
 :root {
@@ -20,12 +19,17 @@
   --low: #6fcf97;
   --danger: #e85d4c;
 
-  --font-family: "Gill Sans Extrabold", sans-serif;
+  --font-display: "Barlow Condensed", "Oswald", sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", "Courier New", monospace;
 }
 
 * { box-sizing: border-box; }
+
+/* Author CSS like `.field { display: flex }` beats the browser's built-in
+   [hidden] rule, which would leave "hidden" elements visible. This makes
+   the hidden attribute always win. */
+[hidden] { display: none !important; }
 
 body {
   margin: 0;
@@ -36,8 +40,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
-   Header — sticky, satisfies Task 10's "position: sticky on one persistent
-   UI element" requirement.
+   Header — sticky
 --------------------------------------------------------------------------- */
 .site-header {
   position: sticky;
@@ -46,12 +49,21 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 26px;
+  gap: 12px;
+  padding: 14px 24px;
   background: var(--surface);
   border-bottom: 3px solid var(--accent);
 }
 
 .header-inner { display: flex; align-items: baseline; gap: 10px; }
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
 
 .eyebrow {
   font-family: var(--font-mono);
@@ -78,6 +90,19 @@ body {
 .header-status.online::before { content: "● "; color: var(--low); }
 .header-status.offline::before { content: "● "; color: var(--danger); }
 
+.user-chip {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 3px 8px;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ---------------------------------------------------------------------------
    Layout
 --------------------------------------------------------------------------- */
@@ -87,7 +112,7 @@ main {
   padding: 28px 24px 60px;
 }
 
-section.intake, section.board {
+section.intake, section.board, section.auth-panel {
   margin-bottom: 32px;
 }
 
@@ -99,10 +124,23 @@ h2 {
   margin: 0 0 14px;
 }
 
+/* Message banner */
+.notice {
+  margin: 0 0 20px;
+  padding: 10px 14px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+.notice.error { border-left-color: var(--danger); }
+
 /* ---------------------------------------------------------------------------
-   Intake form
+   Intake + auth panels (same card style)
 --------------------------------------------------------------------------- */
-.intake {
+.intake, .auth-panel {
   background: var(--surface);
   border: 1px solid var(--border);
   border-left: 4px solid var(--accent);
@@ -110,12 +148,26 @@ h2 {
   border-radius: 4px;
 }
 
+.auth-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+
+.tab {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 6px 14px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.tab.active { border-color: var(--accent); color: var(--accent); }
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 .field { margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; }
 
-.field-row {
-  display: flex;
-  gap: 16px;
-}
+.field-row { display: flex; gap: 16px; }
 .field-row .field { flex: 1; }
 
 label {
@@ -126,7 +178,7 @@ label {
   color: var(--text-muted);
 }
 
-input[type="text"], select {
+input[type="text"], input[type="password"], select {
   background: var(--bg);
   border: 1px solid var(--border);
   color: var(--text);
@@ -136,22 +188,21 @@ input[type="text"], select {
   font-size: 0.95rem;
 }
 
-input[type="text"]:focus, select:focus {
+input[type="text"]:focus, input[type="password"]:focus, select:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
   border-color: var(--accent);
 }
 
-input[aria-invalid="true"] {
-  border-color: var(--danger);
-}
+input[aria-invalid="true"] { border-color: var(--danger); }
 
 .field-error {
   font-family: var(--font-mono);
   font-size: 0.78rem;
   color: var(--danger);
-  margin: 0;
+  margin: 0 0 12px;
 }
+.field .field-error { margin: 0; }
 
 .btn-primary {
   background: var(--accent);
@@ -166,11 +217,12 @@ input[aria-invalid="true"] {
   margin-top: 4px;
 }
 .btn-primary:hover { filter: brightness(1.08); }
+.btn-primary:disabled { opacity: 0.55; cursor: progress; }
 .btn-primary:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
 /* ---------------------------------------------------------------------------
-   Task list — Task 10's deliberate box model: visible padding/border/margin
-   on both the container and individual items.
+   Task list — deliberate box model: padding/border/margin on the container
+   and on each item.
 --------------------------------------------------------------------------- */
 .board-header {
   display: flex;
@@ -197,7 +249,7 @@ input[aria-invalid="true"] {
 .task-item {
   background: var(--surface-raised);
   border: 1px solid var(--border);
-  border-left: 5px solid var(--medium); /* overridden per-priority below */
+  border-left: 5px solid var(--medium);
   border-radius: 3px;
   padding: 14px 16px;
   margin: 0;
@@ -229,11 +281,7 @@ input[aria-invalid="true"] {
   flex-wrap: wrap;
 }
 
-.priority-tag {
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-weight: 600;
-}
+.priority-tag { text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
 .priority-tag.priority-high { color: var(--high); }
 .priority-tag.priority-medium { color: var(--medium); }
 .priority-tag.priority-low { color: var(--low); }
@@ -267,7 +315,7 @@ input[aria-invalid="true"] {
 .edit-row input, .edit-row select { flex: 1; min-width: 100px; }
 
 /* ---------------------------------------------------------------------------
-   Responsive breakpoints (Task 10) — layout visibly changes at both.
+   Responsive breakpoints — layout visibly changes at both.
 --------------------------------------------------------------------------- */
 @media (max-width: 768px) {
   main { padding: 20px 16px 50px; }
@@ -277,8 +325,9 @@ input[aria-invalid="true"] {
 }
 
 @media (max-width: 480px) {
-  .site-header { flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px 16px; }
+  .site-header { flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px 16px; }
+  .header-right { justify-content: flex-start; }
   .site-header h1 { font-size: 1.4rem; }
-  .intake { padding: 16px; }
+  .intake, .auth-panel { padding: 16px; }
   .btn-primary { width: 100%; }
 }
