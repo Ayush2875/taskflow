@@ -80,7 +80,7 @@ async def log_requests(request, call_next):
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://taskflow-98k.pages.dev/"],
+    allow_origins=["https://taskflow-98k.pages.dev"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
