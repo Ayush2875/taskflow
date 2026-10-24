@@ -14,7 +14,7 @@
  * cookie instead.
  */
 
-const API_BASE = "https://taskflow-api-olqz.onrender.com/";
+const API_BASE = "https://taskflow-api-olqz.onrender.com";
 const TOKEN_KEY = "taskflow_token";
 const USER_KEY = "taskflow_user";
 const CACHE_KEY = "taskflow_task_cache";
