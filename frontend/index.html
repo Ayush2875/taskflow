@@ -8,18 +8,51 @@
 </head>
 <body>
 
-  <!-- Sticky header bar (Task 10: position: sticky on a persistent UI element) -->
+  <!-- Sticky header bar -->
   <header class="site-header">
     <div class="header-inner">
       <span class="eyebrow">Blinkit Ops</span>
       <h1>TaskFlow</h1>
     </div>
-    <span class="header-status" id="connection-status">connecting…</span>
+    <div class="header-right">
+      <span class="header-status" id="connection-status">connecting…</span>
+      <span class="user-chip" id="user-chip" hidden></span>
+      <button type="button" class="btn-icon" id="logout-btn" hidden>Log out</button>
+    </div>
   </header>
 
   <main>
-    <!-- Intake form (Task 9) -->
-    <section class="intake" aria-labelledby="intake-heading">
+    <!-- Non-blocking message banner (replaces alert() popups) -->
+    <p class="notice" id="notice" role="status" hidden></p>
+
+    <!-- Login / Register — shown only when logged out -->
+    <section class="auth-panel" id="auth-panel" aria-labelledby="auth-heading">
+      <div class="auth-tabs">
+        <button type="button" class="tab active" id="tab-login">Log in</button>
+        <button type="button" class="tab" id="tab-register">Register</button>
+      </div>
+      <h2 id="auth-heading">Log in to add or edit tickets</h2>
+
+      <form id="auth-form" novalidate>
+        <div class="field" id="name-field" hidden>
+          <label for="auth-name">Name</label>
+          <input type="text" id="auth-name" autocomplete="name" />
+        </div>
+        <div class="field">
+          <label for="auth-email">Email</label>
+          <input type="text" id="auth-email" autocomplete="email" />
+        </div>
+        <div class="field">
+          <label for="auth-password">Password</label>
+          <input type="password" id="auth-password" autocomplete="current-password" />
+        </div>
+        <p class="field-error" id="auth-error" hidden></p>
+        <button type="submit" class="btn-primary" id="auth-submit">Log in</button>
+      </form>
+    </section>
+
+    <!-- Add-task form — shown only when logged in -->
+    <section class="intake" id="intake" aria-labelledby="intake-heading" hidden>
       <h2 id="intake-heading">New ticket</h2>
 
       <form id="task-form" novalidate>
@@ -49,7 +82,7 @@
       </form>
     </section>
 
-    <!-- Task list (Task 9/11) -->
+    <!-- Task list — readable by everyone -->
     <section class="board" aria-labelledby="board-heading">
       <div class="board-header">
         <h2 id="board-heading">Open tickets</h2>
@@ -60,7 +93,7 @@
         <!-- Task items are injected here by script.js via createElement/appendChild -->
       </div>
 
-      <p class="empty-state" id="empty-state" hidden>No tickets yet — add one above.</p>
+      <p class="empty-state" id="empty-state" hidden>No tickets yet.</p>
     </section>
   </main>
 
